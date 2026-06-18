@@ -8,7 +8,7 @@ export let observing = false;
 
 export function init() {
     if (document.location.hostname.endsWith("dlsite.com")) {
-        console.log("[RJ2Link] Disabled on DLSite to avoid layout conflicts.");
+        console.log("[DLsite Plus] Disabled on DLSite to avoid layout conflicts.");
         return;
     }
 

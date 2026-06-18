@@ -10,7 +10,7 @@ export default defineConfig({
     monkey({
       entry: 'src/main.ts',
       userscript: {
-        name: 'RJ2Link',
+        name: 'DLsite Plus',
         namespace: 'Leovikii',
         author: 'Leovikii',
         description: {
