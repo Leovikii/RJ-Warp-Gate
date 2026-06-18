@@ -171,24 +171,40 @@ function toggleDarkMode() {
 }
 
 function applyDarkMode() {
-  document.documentElement.classList.add('rj-warp-gate-dark-mode');
-
-  if (!styleElement) {
-    styleElement = document.createElement('style');
-    styleElement.textContent = darkThemeCss;
-    document.head.appendChild(styleElement);
+  if (document.documentElement) {
+    document.documentElement.classList.add('rj-warp-gate-dark-mode');
   }
 
-  if (!metaElement) {
-    // This tells Dark Reader to completely ignore this website
-    metaElement = document.createElement('meta');
-    metaElement.name = 'darkreader-lock';
-    document.head.appendChild(metaElement);
+  const insertElements = () => {
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.textContent = darkThemeCss;
+      const target = document.head || document.documentElement;
+      if (target) target.appendChild(styleElement);
+    }
+
+    if (!metaElement) {
+      metaElement = document.createElement('meta');
+      metaElement.name = 'darkreader-lock';
+      const target = document.head || document.documentElement;
+      if (target) target.appendChild(metaElement);
+    }
+  };
+
+  if (document.head || document.documentElement) {
+    insertElements();
+  } else {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.documentElement?.classList.add('rj-warp-gate-dark-mode');
+      insertElements();
+    }, { once: true });
   }
 }
 
 function removeDarkMode() {
-  document.documentElement.classList.remove('rj-warp-gate-dark-mode');
+  if (document.documentElement) {
+    document.documentElement.classList.remove('rj-warp-gate-dark-mode');
+  }
   
   if (styleElement) {
     styleElement.remove();
