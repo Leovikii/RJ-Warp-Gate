@@ -22,32 +22,50 @@
       </div>
 
       <div v-else class="popup-content">
-        <!-- Left Panel: Cover Image -->
-        <div class="panel-left">
-          <CoverImage :src="imgLink" />
-        </div>
-
-        <!-- Right Panel: Information -->
-        <div class="panel-right">
-          <div 
+        <div class="header-section">
+          <span 
+            class="header-rjcode" 
+            @click="onCopyRjCode"
+            title="点击复制 RJ 号"
+          >
+            {{ state.rjCode.toUpperCase() }}
+          </span>
+          <span 
             class="work-title" 
             :title="titleHint"
             @click="onCopyTitle"
           >
             {{ title || 'Loading...' }}
+          </span>
+        </div>
+
+        <div class="panel-container">
+          <!-- Left Panel: Cover Image and DLsite Link -->
+          <div class="panel-left">
+            <div class="dlsite-cover-container">
+              <CoverImage :src="imgLink" />
+            </div>
+            <LinkButton 
+              :href="'https://www.dlsite.com/maniax/work/=/product_id/' + state.rjCode.toUpperCase() + '.html'"
+              theme="dlsite"
+            />
+            
+            <LinkButton 
+              v-if="asmrOneUrl"
+              :href="asmrOneUrl"
+              theme="asmrone"
+              style="margin-top: 10px;"
+            />
           </div>
-          
-          <RJCodeChain 
-            :chain="chain" 
-            :currentRj="state.rjCode" 
-            :isParent="state.isParent"
-          />
+
+          <!-- Right Panel: Information -->
+          <div class="panel-right">
 
           <WorkTags :tags="tags" />
 
-          <div class="info-container">
+          <div class="info-container primary-info">
             <InfoRow 
-              v-for="row in infoRows" 
+              v-for="row in primaryRows" 
               :key="row.id"
               :title="row.title"
               :items="row.items"
@@ -55,6 +73,19 @@
               :copyHint="copyHint"
             />
           </div>
+
+          <!-- Secondary Grid Layout -->
+          <div class="info-container secondary-info-grid">
+            <InfoRow 
+              v-for="row in secondaryRows" 
+              :key="row.id"
+              :title="row.title"
+              :items="row.items"
+              :separator="row.separator"
+              :copyHint="copyHint"
+            />
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -69,9 +100,9 @@ import { localizePopup, localizationMap } from '../config/localization';
 import { VOICELINK_CLASS } from '../config/constants';
 
 import CoverImage from './components/CoverImage.vue';
-import RJCodeChain from './components/RJCodeChain.vue';
 import WorkTags from './components/WorkTags.vue';
 import InfoRow from './components/InfoRow.vue';
+import LinkButton from './components/LinkButton.vue';
 
 const props = defineProps<{
   state: PopupState;
@@ -84,10 +115,11 @@ const workFound = ref(true);
 const loading = ref(true);
 const title = ref('');
 const imgLink = ref('');
-const chain = ref<string[]>([]);
-const infoRows = ref<any[]>([]);
 const tags = ref<any[]>([]);
+const primaryRows = ref<any[]>([]);
+const secondaryRows = ref<any[]>([]);
 const isGirls = ref(false);
+const asmrOneUrl = ref<string | null>(null);
 
 const titleHint = computed(() => localizePopup(localizationMap.click_to_copy_title));
 const copyHint = computed(() => localizePopup(localizationMap.click_to_copy));
@@ -137,6 +169,18 @@ const onCopyTitle = (e: MouseEvent) => {
   }
 };
 
+const onCopyRjCode = (e: MouseEvent) => {
+  if (props.state.rjCode && typeof GM_setClipboard !== 'undefined') {
+    GM_setClipboard(props.state.rjCode.toUpperCase(), 'text');
+    const target = e.target as HTMLElement;
+    const oldColor = target.style.color;
+    target.style.color = '#4ade80';
+    setTimeout(() => {
+      target.style.color = oldColor;
+    }, 500);
+  }
+};
+
 const updatePopupData = async () => {
   if (!props.state.display || !props.state.rjCode) return;
   const rjCode = props.state.rjCode;
@@ -145,10 +189,11 @@ const updatePopupData = async () => {
   workFound.value = false;
   title.value = '';
   imgLink.value = '';
-  chain.value = [];
-  infoRows.value = [];
+  primaryRows.value = [];
+  secondaryRows.value = [];
   tags.value = [];
   isGirls.value = false;
+  asmrOneUrl.value = null;
 
   try {
     let found = await WorkPromise.getFound(rjCode);
@@ -169,11 +214,11 @@ const updatePopupData = async () => {
   // Fetch parallel data
   Promise.allSettled([
     WorkPromise.getWorkTitle(rjCode).then(t => { if (rjCode === props.state.rjCode) title.value = t; }),
-    WorkPromise.getRJChain(rjCode).then(c => { if (rjCode === props.state.rjCode) chain.value = c; }),
     WorkPromise.getImgLink(rjCode).then(link => {
       if (rjCode === props.state.rjCode && typeof link === 'string') imgLink.value = link;
     }),
     WorkPromise.getGirls(rjCode).then(g => { if (rjCode === props.state.rjCode) isGirls.value = !!g; }),
+    WorkPromise.checkAsmrOne(rjCode).then(url => { if (rjCode === props.state.rjCode) asmrOneUrl.value = url; }),
   ]);
 
   try {
@@ -191,10 +236,9 @@ const updatePopupData = async () => {
     tags.value = newTags;
 
     // Rows
-    const order = [
-        "dl_count", "circle_name", "release_date", "age_rating",
-        "scenario", "illustration", "voice_actor", "music", "genre", "file_size"
-    ];
+    const primaryOrder = ["circle_name", "voice_actor", "genre", "file_size"];
+    const secondaryOrder = ["dl_count", "release_date", "age_rating", "scenario", "illustration", "music"];
+    const order = [...primaryOrder, ...secondaryOrder];
     
     const rowPromises = order.map(async (id: string) => {
       try {
@@ -234,12 +278,20 @@ const updatePopupData = async () => {
     if (!props.state.display || rjCode !== props.state.rjCode) return;
     
     const validRows = results.filter(Boolean) as any[];
-    const sortedRows = [];
-    for (const id of order) {
+    
+    const pRows = [];
+    for (const id of primaryOrder) {
       const matched = validRows.find(r => r.id === id);
-      if (matched) sortedRows.push(matched);
+      if (matched) pRows.push(matched);
     }
-    infoRows.value = sortedRows;
+    primaryRows.value = pRows;
+
+    const sRows = [];
+    for (const id of secondaryOrder) {
+      const matched = validRows.find(r => r.id === id);
+      if (matched) sRows.push(matched);
+    }
+    secondaryRows.value = sRows;
     
   } catch (e) {
     console.error(e);
@@ -285,6 +337,8 @@ watch(() => props.state.display, (newVal) => {
   
   display: flex;
   flex-direction: column;
+  pointer-events: auto; /* Allow mouse interaction within the popup */
+  user-select: text;    /* Allow text selection */
 }
 
 .theme-maniax {
@@ -324,15 +378,65 @@ watch(() => props.state.display, (newVal) => {
 
 .popup-content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   height: 100%;
+  gap: 12px;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header-rjcode {
+  cursor: pointer;
+  border-bottom: 2px dashed rgba(244, 114, 182, 0.7);
+  background-color: rgba(244, 114, 182, 0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-right: 12px;
+  color: rgb(244, 114, 182);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: bold;
+  font-size: 1.1em;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.header-rjcode:hover {
+  background-color: rgba(244, 114, 182, 0.2);
+  color: #fff;
+}
+
+.work-title {
+  font-size: 1.4em;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding-right: 20px; /* Space for close btn */
+  flex: 1;
+}
+
+.panel-container {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
   gap: 20px;
+  min-height: 0; /* Important for scrollable children */
 }
 
 .panel-left {
   flex: 0 0 240px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.dlsite-cover-container {
+  display: block;
+  margin-bottom: 12px;
 }
 
 .panel-right {
@@ -356,16 +460,6 @@ watch(() => props.state.display, (newVal) => {
   border-radius: 4px;
 }
 
-.work-title {
-  font-size: 1.4em;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding-right: 20px; /* Space for close btn */
-}
-
 .work-title:hover {
   color: #93c5fd; /* Blue 300 */
 }
@@ -374,8 +468,33 @@ watch(() => props.state.display, (newVal) => {
   margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
+
+.secondary-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.secondary-info-grid :deep(.dlsite-plus-info-row) {
+  font-size: 0.95em;
+  margin-bottom: 0;
+}
+
+.secondary-info-grid :deep(.dlsite-plus-info-title) {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.secondary-info-grid :deep(.dlsite-plus-info-content) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Make scenario span 2 columns if it's long, but we'll let it be. If we really want, we can do it via nth-child but it's fine for now. */
 
 /* Loader */
 .popup-loader {

@@ -8,6 +8,14 @@ export const Parser = {
             NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
             {
                 acceptNode: function (node: any) {
+                    let el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+                    while (el && el !== document.body) {
+                        if (el.classList?.contains('dlsite-plus-popup') || el.classList?.contains(VOICELINK_IGNORED_CLASS)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        el = el.parentElement;
+                    }
+
                     if (node.nodeName === "SCRIPT" || node.parentElement && node.parentElement.nodeName === "SCRIPT") {
                         return NodeFilter.FILTER_REJECT;
                     }
@@ -24,8 +32,7 @@ export const Parser = {
                     }
 
                     if (node.nodeName !== "#text") return NodeFilter.FILTER_SKIP;
-                    if (node.parentElement?.classList.contains(VOICELINK_IGNORED_CLASS)
-                        || node.parentElement?.hasAttribute(RJCODE_ATTRIBUTE)) {
+                    if (node.parentElement?.hasAttribute(RJCODE_ATTRIBUTE)) {
                         return NodeFilter.FILTER_SKIP;
                     }
 
@@ -65,14 +72,31 @@ export const Parser = {
     },
 
     wrapRJCode: function (rjCode: string) {
-        let e = document.createElement("a");
+        let e = document.createElement("span");
         e.classList.add(VOICELINK_CLASS);
-        e.href = `https://www.dlsite.com/maniax/work/=/product_id/${rjCode.toUpperCase()}.html`
         e.innerText = rjCode;
-        e.target = "_blank";
-        e.rel = "noreferrer";
         e.classList.add(VOICELINK_IGNORED_CLASS);
-        e.style.setProperty("display", "inline", "important");
+        
+        // Style it as a subtle interactive button
+        e.style.cursor = "pointer";
+        e.style.borderBottom = "1px dashed rgba(244, 114, 182, 0.7)";
+        e.style.backgroundColor = "rgba(244, 114, 182, 0.05)";
+        e.style.borderRadius = "3px";
+        e.style.padding = "1px 3px";
+        e.style.margin = "0 2px";
+        e.style.display = "inline-block";
+        e.style.transition = "background-color 0.2s, border-bottom-color 0.2s";
+        e.style.color = "#f472b6"; // Sakura pink
+        
+        // Add hover effect via listeners because it's inline styled
+        e.addEventListener("mouseenter", () => {
+            e.style.backgroundColor = "rgba(244, 114, 182, 0.15)";
+            e.style.borderBottomColor = "rgba(244, 114, 182, 1)";
+        });
+        e.addEventListener("mouseleave", () => {
+            e.style.backgroundColor = "rgba(244, 114, 182, 0.05)";
+            e.style.borderBottomColor = "rgba(244, 114, 182, 0.7)";
+        });
 
         e.setAttribute(RJCODE_ATTRIBUTE, rjCode.toUpperCase());
         e.setAttribute("voicelink-linkified", "true");
@@ -97,6 +121,27 @@ export const Parser = {
 
         e.classList.add(VOICELINK_CLASS);
         e.setAttribute(RJCODE_ATTRIBUTE, rj.toUpperCase());
+        
+        // Remove href to avoid bottom-left URL prompt, make it a button-like element
+        e.removeAttribute("href");
+        e.removeAttribute("target");
+        e.removeAttribute("rel");
+        e.style.cursor = "pointer";
+        e.style.borderBottom = "1px dashed rgba(244, 114, 182, 0.7)";
+        e.style.backgroundColor = "rgba(244, 114, 182, 0.05)";
+        e.style.borderRadius = "3px";
+        e.style.padding = "1px 3px";
+        e.style.transition = "background-color 0.2s, border-bottom-color 0.2s";
+        e.style.color = "#f472b6"; // Sakura pink
+        e.addEventListener("mouseenter", () => {
+            e.style.backgroundColor = "rgba(244, 114, 182, 0.15)";
+            e.style.borderBottomColor = "rgba(244, 114, 182, 1)";
+        });
+        e.addEventListener("mouseleave", () => {
+            e.style.backgroundColor = "rgba(244, 114, 182, 0.05)";
+            e.style.borderBottomColor = "rgba(244, 114, 182, 0.7)";
+        });
+
         e.addEventListener("click", Popup.click);
     },
 

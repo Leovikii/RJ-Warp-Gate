@@ -43,18 +43,6 @@ export const WorkPromise = {
             return data.translation_info ? data.translation_info : {};
         },
 
-    getRJChain: async function (rjCode) {
-            //RJxxx → RJxxx → RJxxx，这样从子级指向父级
-            const trans = await WorkPromise.getTranslationInfo(rjCode);
-            let chain = [rjCode];
-            if (trans.is_child) {
-                chain.push(trans.parent_workno, trans.original_workno);
-            } else if (trans.is_parent) {
-                chain.push(trans.original_workno);
-            }
-            return chain;
-        },
-
     getParentRJ: async function (rjCode) {
             try {
                 const p = WorkPromise.getWorkPromise(rjCode);
@@ -522,6 +510,30 @@ export const WorkPromise = {
             if (info.filesize) return info.filesize;
 
             throw new Error("无法获取文件大小信息");
+        },
+
+    checkAsmrOne: async function (rjCode: string): Promise<string | null> {
+            return new Promise((resolve) => {
+                const rjNumber = rjCode.toUpperCase().replace('RJ', '');
+                const apiUrl = `https://api.asmr-200.com/api/work/${rjNumber}`;
+                
+                // Using Tampermonkey's GM_xmlhttpRequest to avoid CORS issues
+                GM_xmlhttpRequest({
+                    method: 'GET',
+                    url: apiUrl,
+                    headers: { "Referer": "https://www.asmr.one/" },
+                    onload: function(response) {
+                        if (response.status === 200) {
+                            resolve(`https://www.asmr.one/work/${rjCode.toUpperCase()}`);
+                        } else {
+                            resolve(null);
+                        }
+                    },
+                    onerror: function() {
+                        resolve(null);
+                    }
+                });
+            });
         },
 
 
