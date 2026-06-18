@@ -88,12 +88,3 @@ import { VOICELINK_CLASS } from '../config/constants';
         })
     }
 
-    /**
-     * 将文本转化成 'SHA-256|原文本长度' 格式的哈希字符串
-     * @param text {string} 待转换的文本
-     * @returns {Promise<string>}
-     */
-    export async function hash(text) {
-        return sha256(text);
-    }
-

@@ -45,9 +45,7 @@ export default defineConfig({
           'GM_xmlhttpRequest'
         ],
         'run-at': 'document-start',
-        require: [
-          'https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.11.0/sha256.min.js'
-        ],
+
       },
     }),
   ],

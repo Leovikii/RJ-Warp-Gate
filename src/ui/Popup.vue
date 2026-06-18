@@ -3,7 +3,7 @@
     <div 
       v-if="state.display"
       ref="popupRef" 
-      class="rj2link-popup"
+      class="dlsite-plus-popup"
       :class="[isGirls ? 'theme-girls' : 'theme-maniax']"
       :style="positionStyle"
     >
@@ -257,7 +257,7 @@ watch(() => props.state.display, (newVal) => {
 </script>
 
 <style scoped>
-.rj2link-popup {
+.dlsite-plus-popup {
   position: fixed;
   z-index: 2147483646;
   width: 650px;
@@ -447,7 +447,7 @@ watch(() => props.state.display, (newVal) => {
     width: 100%;
     margin-bottom: 16px;
   }
-  .rj2link-popup {
+  .dlsite-plus-popup {
     width: 95vw;
     left: 2.5vw !important;
   }

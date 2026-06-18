@@ -1,23 +1,23 @@
 <template>
-  <div class="rj2link-info-row" v-if="items && items.length > 0">
+  <div class="dlsite-plus-info-row" v-if="items && items.length > 0">
     <span 
-      class="rj2link-info-title" 
+      class="dlsite-plus-info-title" 
       :title="copyHint"
       @click="onCopy(copyText || title, $event)"
     >
       {{ title }}
     </span>
-    <span class="rj2link-info-content">
+    <span class="dlsite-plus-info-content">
       <template v-for="(item, index) in items" :key="index">
         <span 
           v-if="item.text" 
-          :class="['rj2link-info-item', item.class]" 
+          :class="['dlsite-plus-info-item', item.class]" 
           :title="copyHint"
           @click="onCopy(item.text, $event)"
         >
           {{ item.text }}
         </span>
-        <span v-if="index < items.length - 1" class="rj2link-info-separator">{{ separator || ' ' }}</span>
+        <span v-if="index < items.length - 1" class="dlsite-plus-info-separator">{{ separator || ' ' }}</span>
       </template>
     </span>
   </div>
@@ -49,7 +49,7 @@ const onCopy = (text: string, e: MouseEvent) => {
 </script>
 
 <style scoped>
-.rj2link-info-row {
+.dlsite-plus-info-row {
   display: flex;
   align-items: flex-start;
   margin-bottom: 4px;
@@ -57,7 +57,7 @@ const onCopy = (text: string, e: MouseEvent) => {
   line-height: 1.4;
 }
 
-.rj2link-info-title {
+.dlsite-plus-info-title {
   font-weight: 600;
   margin-right: 8px;
   color: rgba(255, 255, 255, 0.9);
@@ -66,31 +66,31 @@ const onCopy = (text: string, e: MouseEvent) => {
   transition: color 0.2s;
 }
 
-.rj2link-info-title::after {
+.dlsite-plus-info-title::after {
   content: ":";
 }
 
-.rj2link-info-title:hover {
+.dlsite-plus-info-title:hover {
   text-decoration: underline;
   color: #fff;
 }
 
-.rj2link-info-content {
+.dlsite-plus-info-content {
   flex: 1;
   color: rgba(255, 255, 255, 0.8);
 }
 
-.rj2link-info-item {
+.dlsite-plus-info-item {
   cursor: pointer;
   transition: color 0.2s;
 }
 
-.rj2link-info-item:hover {
+.dlsite-plus-info-item:hover {
   text-decoration: underline;
   color: #fff;
 }
 
-.rj2link-info-separator {
+.dlsite-plus-info-separator {
   color: rgba(255, 255, 255, 0.5);
   margin: 0 2px;
 }

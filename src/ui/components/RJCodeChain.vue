@@ -1,5 +1,5 @@
 <template>
-  <div class="rj2link-rjcode-chain">
+  <div class="dlsite-plus-rjcode-chain">
     <span class="bracket">[</span>
     <span v-if="isParent" class="arrow-up">↑</span>
     
@@ -32,7 +32,7 @@ defineProps<{
 </script>
 
 <style scoped>
-.rj2link-rjcode-chain {
+.dlsite-plus-rjcode-chain {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.9em;
   color: rgba(255, 255, 255, 0.7);

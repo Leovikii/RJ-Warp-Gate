@@ -1,9 +1,9 @@
 <template>
-  <div class="rj2link-tags-container" v-if="tags && tags.length > 0">
+  <div class="dlsite-plus-tags-container" v-if="tags && tags.length > 0">
     <span 
       v-for="(tag, index) in tags" 
       :key="index" 
-      class="rj2link-tag" 
+      class="dlsite-plus-tag" 
       :class="[tag.class, tag.small ? 'is-small' : '']"
       @click="tag.onClick ? tag.onClick() : null"
       :style="tag.onClick ? 'cursor: pointer;' : ''"
@@ -20,7 +20,7 @@ defineProps<{
 </script>
 
 <style scoped>
-.rj2link-tags-container {
+.dlsite-plus-tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -28,7 +28,7 @@ defineProps<{
   margin-bottom: 8px;
 }
 
-.rj2link-tag {
+.dlsite-plus-tag {
   padding: 2px 8px;
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.15);
@@ -39,7 +39,7 @@ defineProps<{
   backdrop-filter: blur(4px);
 }
 
-.rj2link-tag.is-small {
+.dlsite-plus-tag.is-small {
   font-size: 0.75em;
   padding: 2px 6px;
 }
