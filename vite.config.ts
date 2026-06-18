@@ -38,7 +38,9 @@ export default defineConfig({
           'GM_deleteValue',
           'GM_addElement',
           'GM.xmlHttpRequest',
-          'GM_xmlhttpRequest'
+          'GM_xmlhttpRequest',
+          'GM_registerMenuCommand',
+          'GM_unregisterMenuCommand'
         ],
         'run-at': 'document-start',
 

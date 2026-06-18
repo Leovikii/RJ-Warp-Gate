@@ -359,6 +359,18 @@ import { Popup } from '../ui/popup';
             en_US: "Voiced Comics"
         },
 
+        switch_to_light_mode: {
+            zh_CN: "☀️ 切换至白天模式",
+            zh_TW: "☀️ 切換至白天模式",
+            en_US: "☀️ Switch to Light Mode"
+        },
+
+        switch_to_dark_mode: {
+            zh_CN: "🌙 切换至夜间模式",
+            zh_TW: "🌙 切換至夜間模式",
+            en_US: "🌙 Switch to Dark Mode"
+        },
+
         get: function (key: any) {
             let lang = navigator.language.toLowerCase();
             let langKey = "en_US";

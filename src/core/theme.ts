@@ -1,0 +1,202 @@
+import { localize } from '../config/localization';
+
+const STORAGE_KEY = 'sp_dark_mode_enabled';
+
+let menuCommandId: any = null;
+let styleElement: HTMLStyleElement | null = null;
+let metaElement: HTMLMetaElement | null = null;
+
+const darkThemeCss = `
+  /* 1. 全局背景深色化 */
+  html.dlsite-dark-mode,
+  html.dlsite-dark-mode body,
+  html.dlsite-dark-mode #wrap,
+  html.dlsite-dark-mode .wrap,
+  html.dlsite-dark-mode #main,
+  html.dlsite-dark-mode .main,
+  html.dlsite-dark-mode .main-wrap,
+  html.dlsite-dark-mode #header,
+  html.dlsite-dark-mode .header,
+  html.dlsite-dark-mode #u-wrap2 {
+    background: #121212 !important;
+    background-color: #121212 !important;
+    background-image: none !important;
+    color: #d1d5db !important;
+  }
+
+  /* 2. 论坛主要表格和容器深色化 */
+  html.dlsite-dark-mode .t_table,
+  html.dlsite-dark-mode .t_table td,
+  html.dlsite-dark-mode .t_table th,
+  html.dlsite-dark-mode .f_one,
+  html.dlsite-dark-mode .f_two,
+  html.dlsite-dark-mode .t_one,
+  html.dlsite-dark-mode .t_two,
+  html.dlsite-dark-mode .r_one,
+  html.dlsite-dark-mode .r_two,
+  html.dlsite-dark-mode .tr3 td,
+  html.dlsite-dark-mode .tr2 td,
+  html.dlsite-dark-mode .tr1 td,
+  html.dlsite-dark-mode .tpc_content,
+  html.dlsite-dark-mode .read_t,
+  html.dlsite-dark-mode .read_m,
+  html.dlsite-dark-mode .t5,
+  html.dlsite-dark-mode #u-sidebar,
+  html.dlsite-dark-mode #u-content,
+  html.dlsite-dark-mode #u-contentmain,
+  html.dlsite-dark-mode #u-contentside,
+  html.dlsite-dark-mode .u-table,
+  html.dlsite-dark-mode .u-table td,
+  html.dlsite-dark-mode .u-table th,
+  html.dlsite-dark-mode .bgA,
+  html.dlsite-dark-mode #u-top,
+  html.dlsite-dark-mode #u-top-nav {
+    background: #1e1e1e !important;
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: #e5e7eb !important;
+  }
+
+  /* 3. 表头和标题栏稍微亮一点点，增加层次感 */
+  html.dlsite-dark-mode .h,
+  html.dlsite-dark-mode .h td,
+  html.dlsite-dark-mode .h th,
+  html.dlsite-dark-mode .h b,
+  html.dlsite-dark-mode .h span,
+  html.dlsite-dark-mode #u-top-nav ul.b li,
+  html.dlsite-dark-mode .pages,
+  html.dlsite-dark-mode .pagesone,
+  html.dlsite-dark-mode .u-h1,
+  html.dlsite-dark-mode .u-h5 {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    border-color: #444 !important;
+    color: #f3f4f6 !important;
+  }
+
+  /* 4. 链接颜色调整为适合暗底的亮蓝色 */
+  html.dlsite-dark-mode a {
+    color: #60a5fa !important;
+  }
+  html.dlsite-dark-mode a:hover {
+    color: #93c5fd !important;
+  }
+
+  /* 5. 修复用户发帖时经常带的内联白色背景和黑色字体 */
+  html.dlsite-dark-mode .tpc_content font[color="#000000"],
+  html.dlsite-dark-mode .tpc_content font[color="black"],
+  html.dlsite-dark-mode .tpc_content [style*="color: #000"],
+  html.dlsite-dark-mode .tpc_content [style*="color: black"],
+  html.dlsite-dark-mode .tpc_content [style*="color:#000"] {
+    color: #d1d5db !important;
+  }
+  
+  /* 6. 修复内联白色背景和各种白色区块 (如购买框、引用框) */
+  html.dlsite-dark-mode [style*="background-color: #fff"],
+  html.dlsite-dark-mode [style*="background-color:#fff"],
+  html.dlsite-dark-mode [style*="background-color: white"],
+  html.dlsite-dark-mode [style*="background-color:#ffffff"],
+  html.dlsite-dark-mode [style*="background: #fff"],
+  html.dlsite-dark-mode [style*="background: white"],
+  html.dlsite-dark-mode [style*="background:#fff"],
+  html.dlsite-dark-mode [bgcolor="#ffffff"],
+  html.dlsite-dark-mode [bgcolor="#fff"],
+  html.dlsite-dark-mode blockquote,
+  html.dlsite-dark-mode .blockquote,
+  html.dlsite-dark-mode .quote {
+    background: #2d2d2d !important;
+    background-color: #2d2d2d !important;
+    border-color: #444 !important;
+    color: #d1d5db !important;
+  }
+
+  /* 7. 输入框和文本域深色化 */
+  html.dlsite-dark-mode input[type="text"],
+  html.dlsite-dark-mode input[type="password"],
+  html.dlsite-dark-mode textarea,
+  html.dlsite-dark-mode select {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    color: #e5e7eb !important;
+    border: 1px solid #444 !important;
+  }
+`;
+
+export function initThemeManager() {
+  // Only run on target domains
+  const hostname = window.location.hostname;
+  if (!hostname.includes('south-plus') && 
+      !hostname.includes('spring-plus') && 
+      !hostname.includes('level-plus') && 
+      !hostname.includes('imoutolove')) {
+    return;
+  }
+
+  // Inject early if enabled
+  const isEnabled = GM_getValue(STORAGE_KEY, true);
+  if (isEnabled) {
+    applyDarkMode();
+  }
+
+  registerMenu();
+}
+
+function registerMenu() {
+  if (menuCommandId !== null && typeof GM_unregisterMenuCommand !== 'undefined') {
+    GM_unregisterMenuCommand(menuCommandId);
+  }
+
+  const isEnabled = GM_getValue(STORAGE_KEY, true);
+  const menuTitle = isEnabled ? localize('switch_to_light_mode') : localize('switch_to_dark_mode');
+  
+  if (typeof GM_registerMenuCommand !== 'undefined') {
+    menuCommandId = GM_registerMenuCommand(menuTitle, () => {
+      toggleDarkMode();
+    });
+  }
+}
+
+function toggleDarkMode() {
+  const isEnabled = GM_getValue(STORAGE_KEY, true);
+  const newState = !isEnabled;
+  GM_setValue(STORAGE_KEY, newState);
+  
+  if (newState) {
+    applyDarkMode();
+  } else {
+    removeDarkMode();
+  }
+  
+  registerMenu();
+}
+
+function applyDarkMode() {
+  document.documentElement.classList.add('dlsite-dark-mode');
+
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.textContent = darkThemeCss;
+    document.head.appendChild(styleElement);
+  }
+
+  if (!metaElement) {
+    // This tells Dark Reader to completely ignore this website
+    metaElement = document.createElement('meta');
+    metaElement.name = 'darkreader-lock';
+    document.head.appendChild(metaElement);
+  }
+}
+
+function removeDarkMode() {
+  document.documentElement.classList.remove('dlsite-dark-mode');
+  
+  if (styleElement) {
+    styleElement.remove();
+    styleElement = null;
+  }
+
+  if (metaElement) {
+    metaElement.remove();
+    metaElement = null;
+  }
+}
