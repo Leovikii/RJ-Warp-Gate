@@ -26,6 +26,4 @@ export function initDLSiteInjector() {
     rjCode
   });
   app.mount(mountPoint);
-
-  console.log(`[RJ-Warp-Gate] DLSite module initialized for ${rjCode}`);
 }

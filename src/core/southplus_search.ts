@@ -25,8 +25,6 @@ export async function searchSouthPlus(rjCode: string): Promise<SouthPlusSearchRe
   const SEARCH_URL_GET = `https://${domain}/search.php`;
   const SEARCH_URL_POST = `https://${domain}/search.php?step=2`;
 
-  console.log(`[RJ-Warp-Gate Debug] Starting South+ search for ${rjCode} on domain ${domain}`);
-
   return new Promise((resolve) => {
     // 1. First GET to retrieve CSRF token and check if we are already in cooldown
     GM_xmlhttpRequest({
